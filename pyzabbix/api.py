@@ -152,7 +152,7 @@ class ZabbixAPI(object):
         `zabbix`.
 
     >>> from pyzabbix import ZabbixAPI
-    >>> z = ZabbixAPI('https://zabbix.server', user='Admin', password='zabbix')
+    >>> z = ZabbixAPI('https://zabbix.server', username='Admin', password='zabbix')
     >>> # Get API Version
     >>> z.api_info.version()
     >>> u'2.2.1'
@@ -165,19 +165,19 @@ class ZabbixAPI(object):
     >>> z.do_request('host.getobjects', {'status': 1})
     """
 
-    def __init__(self, url=None, use_authenticate=False, use_basic_auth=False, user=None,
+    def __init__(self, url=None, use_authenticate=False, use_basic_auth=False, username=None,
                  password=None):
 
         url = url or os.environ.get('ZABBIX_URL') or 'https://localhost/zabbix'
-        user = user or os.environ.get('ZABBIX_USER') or 'Admin'
+        username = username or os.environ.get('ZABBIX_USER') or 'Admin'
         password = password or os.environ.get('ZABBIX_PASSWORD') or 'zabbix'
 
         self.use_authenticate = use_authenticate
         self.use_basic_auth = use_basic_auth
         self.auth = None
         self.url = url + '/api_jsonrpc.php'
-        self.base64_cred = self.cred_to_base64(user, password) if self.use_basic_auth else None
-        self._login(user, password)
+        self.base64_cred = self.cred_to_base64(username, password) if self.use_basic_auth else None
+        self._login(username, password)
         logger.debug("JSON-PRC Server: %s", self.url)
 
     def __getattr__(self, name):
@@ -190,24 +190,24 @@ class ZabbixAPI(object):
 
         return ZabbixAPIObjectClass(name, self)
 
-    def _login(self, user='', password=''):
+    def _login(self, username='', password=''):
         """Do login to zabbix server.
 
-        :type user: str
-        :param user: Zabbix user
+        :type username: str
+        :param username: Zabbix user
 
         :type password: str
         :param password: Zabbix user password
         """
 
-        logger.debug("ZabbixAPI.login({0},{1})".format(user, HideSensitiveService.HIDEMASK))
+        logger.debug("ZabbixAPI.login({0},{1})".format(username, HideSensitiveService.HIDEMASK))
 
         self.auth = None
 
         if self.use_authenticate:
-            self.auth = self.user.authenticate(user=user, password=password)
+            self.auth = self.user.authenticate(username=username, password=password)
         else:
-            self.auth = self.user.login(user=user, password=password)
+            self.auth = self.user.login(username=username, password=password)
 
     def _logout(self):
         """Do logout from zabbix server."""
@@ -225,16 +225,16 @@ class ZabbixAPI(object):
         self._logout()
 
     @staticmethod
-    def cred_to_base64(user, password):
+    def cred_to_base64(username, password):
         """Create header for basic authorization
-        :type user: str
-        :param user: Zabbix user
+        :type username: str
+        :param username: Zabbix user
 
         :type password: str
         :param password: Zabbix user password
         :return: str
         """
-        base64string = base64.b64encode('{}:{}'.format(user, password).encode())
+        base64string = base64.b64encode('{}:{}'.format(username, password).encode())
         return base64string.decode()
 
     def api_version(self):
